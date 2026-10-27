@@ -55,7 +55,7 @@ class SGDOptimizer(Optimizer):
         if closure is not None:
             with torch.enable_grad():
                 loss = closure()
-
+    
         for group in self.param_groups:
             lr = group["lr"]
             momentum = group["momentum"]
