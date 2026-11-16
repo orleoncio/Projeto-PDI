@@ -4,6 +4,7 @@ from PIL import Image
 
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
+from preprocessing import get_preprocessing_transform
 
 
 class Hep2Dataset(Dataset):

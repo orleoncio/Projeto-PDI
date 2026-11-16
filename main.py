@@ -12,7 +12,14 @@ def main():
     # Configurações
     epochs = 30
     batch_size = 32
+
+    # Valores aceitos para optimizer_name: "adam" ou "sgd".
     optimizer_name = "adam"
+
+    # Valores aceitos para preprocessing_name: "none" (sem tecnica),
+    # "contrast_expansion" (expansao de contraste) ou
+    # "histogram_equalization" (equalizacao de histograma).
+    preprocessing_name = "none"
 
     # Dispositivo
     device = torch.device(
@@ -23,7 +30,8 @@ def main():
 
     # Carregamento dos dados
     train_loader, test_loader = create_dataloaders(
-        batch_size=batch_size
+        batch_size=batch_size,
+        preprocessing=preprocessing_name
     )
 
     print(
