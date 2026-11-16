@@ -4,6 +4,7 @@ from PIL import Image
 
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
+from preprocessing import get_preprocessing_transform
 
 
 class Hep2Dataset(Dataset):
@@ -39,15 +40,20 @@ class Hep2Dataset(Dataset):
 
         return image, label
 
-def get_original_transform():
+def get_original_transform(preprocessing="none"):
 
     return transforms.Compose([
+        *(
+            [get_preprocessing_transform(preprocessing)]
+            if preprocessing != "none"
+            else []
+        ),
         transforms.Resize((224, 224)),
         transforms.ToTensor()
     ])
 
-def create_dataloaders(batch_size=32):
-    transform = get_original_transform()
+def create_dataloaders(batch_size=32, preprocessing="none"):
+    transform = get_original_transform(preprocessing)
 
     train_dataset = Hep2Dataset(
         csv_file="dataset/train.csv",
