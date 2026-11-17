@@ -63,7 +63,8 @@ def train_model(
         print(
             f"Epoch [{epoch + 1}/{epochs}] "
             f"Loss: {epoch_loss:.4f} "
-            f"Accuracy: {epoch_accuracy * 100:.2f}%"
+            f"Accuracy: {epoch_accuracy * 100:.2f}%",
+            flush=True
         )
 
     return model
