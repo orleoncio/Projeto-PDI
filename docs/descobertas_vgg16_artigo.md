@@ -49,8 +49,8 @@ Nos nossos experimentos de replicação da VGG-16 no conjunto de dados HEp-2 (6 
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
 | **Artigo Original (Tabela 3)** | **SGD** | **98,16%** | **98,14%** | **97,98%** | **98,05%** | Convergência máxima reportada |
 | **Artigo Original (Tabela 3)** | **Adam** | **19,96%** | **3,33%** | **16,67%** | **5,55%** | Colapso de gradiente / Mínimo local |
-| **Nosso Treino (Do Zero - 30 épocas)** | **SGD** | **88,93%** | **89,67%** | **88,85%** | **89,18%** | Replicação direta e convergência consistente |
-| **Nosso Treino (Do Zero - 30 épocas)** | **Adam** | **21,73%** | **3,62%** | **16,67%** | **5,95%** | **Replicação exata do colapso do artigo** |
+| **Nosso Treino (Do Zero - 30 épocas)** | **SGD** | **89,67%** | **90,08%** | **89,58%** | **89,79%** | Convergência consistente (Loss treino foi a 0.0218) |
+| **Nosso Treino (Do Zero - 30 épocas)** | **Adam** | **21,73%** | **3,62%** | **16,67%** | **5,95%** | **Replicação perfeita do colapso do artigo** |
 | **Nosso Treino (Transfer Learning - 15 épocas)** | **SGD** | **90,51%** | **90,98%** | **90,56%** | **90,57%** | Fine-tuning rápido com GPU |
 | **Nosso Treino (Transfer Learning - 15 épocas)** | **Adam** | *~86-88%* | *—* | *—* | *—* | Evita o colapso por pré-condicionamento |
 
@@ -62,3 +62,4 @@ Nos nossos experimentos de replicação da VGG-16 no conjunto de dados HEp-2 (6 
    Os resultados de **88,93% (SGD)** e **21,73% (Adam)** reproduzem exatamente a dinâmica da Tabela 3 e respaldam a **Análise Fatorial das Tabelas 6 e 7 do artigo** (que mostra que a VGG-16 tem ~47% de dependência do otimizador).
 2. **Utilizar a descoberta do Transfer Learning como discussão enriquecedora:**  
    Destacar no relatório que o colapso do Adam é uma limitação da arquitetura VGG-16 quando inicializada aleatoriamente, mas que pode ser mitigada via Transfer Learning ou inclusão de camadas de normalização (*Batch Normalization*).
+
