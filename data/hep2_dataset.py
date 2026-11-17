@@ -39,15 +39,28 @@ class Hep2Dataset(Dataset):
 
         return image, label
 
-def get_original_transform():
+def get_original_transform(normalize=False):
 
-    return transforms.Compose([
+    ops = [
         transforms.Resize((224, 224)),
         transforms.ToTensor()
-    ])
+    ]
+    if normalize:
+        ops.append(
+            transforms.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225]
+            )
+        )
+    return transforms.Compose(ops)
 
-def create_dataloaders(batch_size=32):
-    transform = get_original_transform()
+def create_dataloaders(
+    batch_size=32,
+    normalize=False,
+    num_workers=0,
+    pin_memory=False
+):
+    transform = get_original_transform(normalize=normalize)
 
     train_dataset = Hep2Dataset(
         csv_file="dataset/train.csv",
@@ -64,13 +77,17 @@ def create_dataloaders(batch_size=32):
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,
-        shuffle=True
+        shuffle=True,
+        num_workers=num_workers,
+        pin_memory=pin_memory
     )
 
     test_loader = DataLoader(
         test_dataset,
         batch_size=batch_size,
-        shuffle=False
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=pin_memory
     )
 
     return train_loader, test_loader
