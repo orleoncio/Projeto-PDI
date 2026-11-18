@@ -21,6 +21,13 @@ def parse_args():
         help="Otimizador a ser utilizado: 'adam' ou 'sgd' (padrão: adam)"
     )
     parser.add_argument(
+        "--preprocessing",
+        type=str,
+        default="none",
+        choices=["none", "contrast_expansion", "histogram_equalization"],
+        help="Pré-processamento: 'none' (original), 'contrast_expansion' ou 'histogram_equalization' (padrão: none)"
+    )
+    parser.add_argument(
         "--epochs",
         type=int,
         default=30,
@@ -85,6 +92,7 @@ def main():
     # Carregamento dos dados
     train_loader, test_loader = create_dataloaders(
         batch_size=batch_size,
+        preprocessing=args.preprocessing,
         normalize=args.pretrained,
         num_workers=args.num_workers,
         pin_memory=use_cuda
@@ -100,7 +108,8 @@ def main():
     results_dir = Path("results")
     results_dir.mkdir(exist_ok=True)
     prefix = "vgg16_pretrained" if args.pretrained else "vgg16"
-    weights_path = results_dir / f"{prefix}_original_{optimizer_name}.pth"
+    prep_tag = "original" if args.preprocessing == "none" else args.preprocessing
+    weights_path = results_dir / f"{prefix}_{prep_tag}_{optimizer_name}.pth"
 
     if not args.eval_only:
         # Criação do otimizador
