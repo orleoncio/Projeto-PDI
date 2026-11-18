@@ -7,10 +7,13 @@ def train_model(
     train_loader,
     optimizer,
     device,
-    epochs=30
+    epochs=30,
+    use_amp=False
 ):
 
     criterion = nn.CrossEntropyLoss()
+    amp_enabled = use_amp and device.type == "cuda"
+    scaler = torch.amp.GradScaler("cuda", enabled=amp_enabled)
 
     for epoch in range(epochs):
 
@@ -22,23 +25,25 @@ def train_model(
 
         for images, labels in train_loader:
 
-            images = images.to(device)
-            labels = labels.to(device)
+            images = images.to(device, non_blocking=amp_enabled)
+            labels = labels.to(device, non_blocking=amp_enabled)
 
             # Limpa os gradientes anteriores
             optimizer.zero_grad()
 
-            # Forward propagation
-            outputs = model(images)
+            # Forward propagation (com Mixed Precision opcional em GPU)
+            with torch.amp.autocast("cuda", enabled=amp_enabled):
+                outputs = model(images)
+                loss = criterion(outputs, labels)
 
-            # Calcula a perda
-            loss = criterion(outputs, labels)
-
-            # Backpropagation
-            loss.backward()
-
-            # Atualiza os pesos
-            optimizer.step()
+            # Backpropagation e atualização dos pesos
+            if amp_enabled:
+                scaler.scale(loss).backward()
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                loss.backward()
+                optimizer.step()
 
             # Acumula a perda
             running_loss += loss.item() * images.size(0)
@@ -58,7 +63,8 @@ def train_model(
         print(
             f"Epoch [{epoch + 1}/{epochs}] "
             f"Loss: {epoch_loss:.4f} "
-            f"Accuracy: {epoch_accuracy * 100:.2f}%"
+            f"Accuracy: {epoch_accuracy * 100:.2f}%",
+            flush=True
         )
 
     return model
