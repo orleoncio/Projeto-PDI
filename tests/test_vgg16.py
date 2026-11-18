@@ -19,7 +19,7 @@ def test_vgg16_architecture():
     )
     print(f"Dispositivo: {device}")
 
-    model = create_vgg16(num_classes=6).to(device)
+    model = create_vgg16(num_classes=6, pretrained=False).to(device)
     print(f"Modelo: {model.__class__.__name__}")
 
     # 1. Verifica as 13 camadas convolucionais (3x3) e 3 camadas lineares (total = 16 camadas)

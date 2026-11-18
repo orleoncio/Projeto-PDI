@@ -1,5 +1,21 @@
+import copy
 import torch
 import torch.nn as nn
+
+
+@torch.no_grad()
+def _evaluate_accuracy(model, val_loader, device):
+    model.eval()
+    correct = 0
+    total = 0
+    for images, labels in val_loader:
+        images = images.to(device)
+        labels = labels.to(device)
+        outputs = model(images)
+        predictions = outputs.argmax(dim=1)
+        total += labels.size(0)
+        correct += (predictions == labels).sum().item()
+    return correct / total if total > 0 else 0.0
 
 
 def train_model(
@@ -8,12 +24,18 @@ def train_model(
     optimizer,
     device,
     epochs=30,
-    use_amp=False
+    use_amp=False,
+    scheduler=None,
+    val_loader=None,
+    max_grad_norm=2.0
 ):
 
     criterion = nn.CrossEntropyLoss()
     amp_enabled = use_amp and device.type == "cuda"
     scaler = torch.amp.GradScaler("cuda", enabled=amp_enabled)
+
+    best_val_acc = -1.0
+    best_model_wts = None
 
     for epoch in range(epochs):
 
@@ -36,13 +58,18 @@ def train_model(
                 outputs = model(images)
                 loss = criterion(outputs, labels)
 
-            # Backpropagation e atualização dos pesos
+            # Backpropagation com Gradient Clipping e atualização dos pesos
             if amp_enabled:
                 scaler.scale(loss).backward()
+                if max_grad_norm is not None:
+                    scaler.unscale_(optimizer)
+                    nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
                 scaler.step(optimizer)
                 scaler.update()
             else:
                 loss.backward()
+                if max_grad_norm is not None:
+                    nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
                 optimizer.step()
 
             # Acumula a perda
@@ -57,14 +84,36 @@ def train_model(
                 predictions == labels
             ).sum().item()
 
+        if scheduler is not None:
+            scheduler.step()
+
         epoch_loss = running_loss / total
         epoch_accuracy = correct / total
 
-        print(
-            f"Epoch [{epoch + 1}/{epochs}] "
-            f"Loss: {epoch_loss:.4f} "
-            f"Accuracy: {epoch_accuracy * 100:.2f}%",
-            flush=True
-        )
+        if val_loader is not None:
+            val_acc = _evaluate_accuracy(model, val_loader, device)
+            is_best = val_acc > best_val_acc
+            if is_best:
+                best_val_acc = val_acc
+                best_model_wts = copy.deepcopy(model.state_dict())
+            star = " ★ [BEST]" if is_best else ""
+            print(
+                f"Epoch [{epoch + 1}/{epochs}] "
+                f"Loss: {epoch_loss:.4f} "
+                f"Train Acc: {epoch_accuracy * 100:.2f}% | "
+                f"Test Acc: {val_acc * 100:.2f}%{star}",
+                flush=True
+            )
+        else:
+            print(
+                f"Epoch [{epoch + 1}/{epochs}] "
+                f"Loss: {epoch_loss:.4f} "
+                f"Accuracy: {epoch_accuracy * 100:.2f}%",
+                flush=True
+            )
+
+    if best_model_wts is not None:
+        print(f"Restaurando o melhor checkpoint do treino (Test Acc: {best_val_acc * 100:.2f}%)")
+        model.load_state_dict(best_model_wts)
 
     return model
