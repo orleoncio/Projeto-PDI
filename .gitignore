@@ -1,0 +1,23 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches de bibliotecas e ferramentas
+.cache/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Ambientes virtuais
+.venv/
+venv/
+ENV/
+env/
+
+# Pesos de modelos e checkpoints grandes (>100MB)
+results/*.pth
+
+# Logs e arquivos do sistema operacional
+*.log
+.DS_Store
+Thumbs.db
