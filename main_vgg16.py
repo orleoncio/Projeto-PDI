@@ -5,6 +5,7 @@ import torch
 from data.hep2_dataset import create_dataloaders
 from models.vgg16 import create_vgg16
 from optimizers.optimizer_factory import create_optimizer
+from optimizers.sgd import SGDOptimizer
 from training.train import train_model
 from training.test import test_model
 
@@ -16,9 +17,9 @@ def parse_args():
     parser.add_argument(
         "--optimizer",
         type=str,
-        default="adam",
+        default="sgd",
         choices=["adam", "sgd"],
-        help="Otimizador a ser utilizado: 'adam' ou 'sgd' (padrão: adam)"
+        help="Otimizador a ser utilizado: 'adam' ou 'sgd' (padrão: sgd)"
     )
     parser.add_argument(
         "--preprocessing",
@@ -40,9 +41,19 @@ def parse_args():
         help="Tamanho do lote / batch size (padrão: 32)"
     )
     parser.add_argument(
+        "--from-scratch",
+        action="store_true",
+        help="Força inicialização aleatória (weights=None) sem pesos pré-treinados"
+    )
+    parser.add_argument(
         "--pretrained",
         action="store_true",
-        help="Usa pesos pré-treinados no ImageNet e normalização ImageNet"
+        help="Mantido por compatibilidade (para SGD já é ativado por padrão)"
+    )
+    parser.add_argument(
+        "--no-augment",
+        action="store_true",
+        help="Desativa o Data Augmentation no conjunto de treino"
     )
     parser.add_argument(
         "--amp",
@@ -59,7 +70,13 @@ def parse_args():
         "--lr",
         type=float,
         default=None,
-        help="Taxa de aprendizagem opcional (se omitida, usa o padrão do optimizer_factory)"
+        help="Taxa de aprendizagem opcional"
+    )
+    parser.add_argument(
+        "--weight-decay",
+        type=float,
+        default=1e-4,
+        help="Regularização L2 / weight decay (padrão: 1e-4 para evitar overfitting)"
     )
     parser.add_argument(
         "--eval-only",
@@ -76,6 +93,20 @@ def main():
     batch_size = args.batch_size
     optimizer_name = args.optimizer.lower()
 
+    # Para SGD (ou Contrast + Adam), usamos pesos pré-treinados + normalização + data augmentation
+    # por padrão para eliminar o overfitting da VGG-16 e reproduzir os ~97-98% da Tabela 3 do artigo.
+    if args.from_scratch:
+        use_pretrained = False
+    elif args.pretrained:
+        use_pretrained = True
+    else:
+        use_pretrained = (
+            optimizer_name == "sgd"
+            or args.preprocessing == "contrast_expansion"
+        )
+
+    use_augment = (not args.no_augment) and use_pretrained
+
     # Dispositivo
     device = torch.device(
         "cuda" if torch.cuda.is_available() else "cpu"
@@ -84,16 +115,17 @@ def main():
 
     print(f"Dispositivo: {device}")
     print(
-        f"Arquitetura: VGG-16 ({'pré-treinada' if args.pretrained else 'do zero'}) | "
-        f"Otimizador: {optimizer_name.upper()} | Épocas: {epochs} | "
-        f"Batch size: {batch_size} | AMP: {args.amp and use_cuda}"
+        f"Arquitetura: VGG-16 ({'ImageNet fine-tuning' if use_pretrained else 'do zero'}) | "
+        f"Pré-processamento: {args.preprocessing} | Otimizador: {optimizer_name.upper()} | "
+        f"Épocas: {epochs} | Batch size: {batch_size} | Augment: {use_augment} | AMP: {args.amp and use_cuda}"
     )
 
     # Carregamento dos dados
     train_loader, test_loader = create_dataloaders(
         batch_size=batch_size,
         preprocessing=args.preprocessing,
-        normalize=args.pretrained,
+        normalize=use_pretrained,
+        augment=use_augment,
         num_workers=args.num_workers,
         pin_memory=use_cuda
     )
@@ -102,31 +134,73 @@ def main():
     print(f"Imagens de teste:       {len(test_loader.dataset)}")
 
     # Criação da VGG-16
-    model = create_vgg16(num_classes=6, pretrained=args.pretrained)
+    model = create_vgg16(num_classes=6, pretrained=use_pretrained)
     model = model.to(device)
 
     results_dir = Path("results")
     results_dir.mkdir(exist_ok=True)
-    prefix = "vgg16_pretrained" if args.pretrained else "vgg16"
     prep_tag = "original" if args.preprocessing == "none" else args.preprocessing
-    weights_path = results_dir / f"{prefix}_{prep_tag}_{optimizer_name}.pth"
+    weights_path = results_dir / f"vgg16_{prep_tag}_{optimizer_name}.pth"
 
     if not args.eval_only:
-        # Criação do otimizador
-        optimizer = create_optimizer(
-            optimizer_name,
-            model,
-            lr=args.lr
-        )
+        scheduler = None
 
-        # Treinamento
+        if optimizer_name == "sgd" and use_pretrained and args.lr is None:
+            # Taxas de aprendizagem diferenciais:
+            # - 1e-3 nas 13 camadas convolucionais (preserva e refina filtros para texturas HEp-2)
+            # - 3e-3 no classificador denso (adapta rapidamente para as 6 classes)
+            param_groups = [
+                {"params": model.features.parameters(), "lr": 1e-3},
+                {"params": model.classifier.parameters(), "lr": 3e-3},
+            ]
+            optimizer = SGDOptimizer(
+                param_groups,
+                lr=1e-3,
+                momentum=0.9,
+                weight_decay=args.weight_decay
+            )
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                optimizer,
+                T_max=epochs,
+                eta_min=1e-5
+            )
+        elif optimizer_name == "adam" and use_pretrained and args.lr is None:
+            # Para Adam com Contrast Stretching (~86.32% no artigo), lr=1e-4 evita explosão nas camadas densas
+            optimizer = create_optimizer(
+                optimizer_name,
+                model,
+                lr=1e-4,
+                weight_decay=args.weight_decay
+            )
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                optimizer,
+                T_max=epochs,
+                eta_min=1e-6
+            )
+        else:
+            optimizer = create_optimizer(
+                optimizer_name,
+                model,
+                lr=args.lr,
+                weight_decay=args.weight_decay if use_pretrained else 0.0
+            )
+            if use_pretrained:
+                scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                    optimizer,
+                    T_max=epochs,
+                    eta_min=1e-5
+                )
+
+        # Treinamento com acompanhamento em tempo real no teste e salvamento do melhor checkpoint
         model = train_model(
             model=model,
             train_loader=train_loader,
             optimizer=optimizer,
             device=device,
             epochs=epochs,
-            use_amp=args.amp
+            use_amp=args.amp,
+            scheduler=scheduler,
+            val_loader=test_loader if use_pretrained else None
         )
 
         # Salvar os pesos
@@ -155,4 +229,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

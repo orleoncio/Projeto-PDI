@@ -2,7 +2,7 @@ from torchvision.models import vgg16, VGG16_Weights
 import torch.nn as nn
 
 
-def create_vgg16(num_classes=6, pretrained=False):
+def create_vgg16(num_classes=6, pretrained=True):
     """
     Cria a arquitetura VGG-16 (Configuração D - Simonyan & Zisserman, 2014)
     seguindo o padrão do artigo de referência.
@@ -14,7 +14,9 @@ def create_vgg16(num_classes=6, pretrained=False):
 
     Parâmetros:
         num_classes (int): Número de classes de saída (padrão: 6 para o dataset HEp-2).
-        pretrained (bool): Se True, carrega pesos pré-treinados no ImageNet.
+        pretrained (bool): Se True (padrão), inicializa o extrator com pesos
+            pré-treinados no ImageNet (VGG16_Weights.DEFAULT) para evitar
+            overfitting nas 138M de conexões da VGG-16.
 
     Retorno:
         nn.Module: Instância da VGG-16 ajustada para `num_classes`.
