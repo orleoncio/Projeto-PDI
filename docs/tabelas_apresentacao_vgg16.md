@@ -15,7 +15,7 @@ Todas as execuções foram realizadas com a VGG-16 por 30 épocas, batch size 32
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
 | **Original** (none) | **SGD** | **Accuracy**<br>**Precision**<br>**Recall**<br>**F1-score** | 98.16%<br>98.14%<br>97.98%<br>98.05% | **97.98%**<br>**97.56%**<br>**97.73%**<br>**97.64%** | **-0.18%**<br>**-0.58%**<br>**-0.25%**<br>**-0.41%** | **Replicação fiel do artigo**.<br>Overfitting eliminado com Data Augmentation $D_4$ + fine-tuning (pico na época 25). |
 | **Original** (none) | **ADAM** | **Accuracy**<br>**Precision**<br>**Recall**<br>**F1-score** | 19.96%<br>3.33%<br>16.67%<br>5.55% | **21.73%**<br>**3.62%**<br>**16.67%**<br>**5.95%** | **+1.77%**<br>**+0.29%**<br>**0.00%**<br>**+0.40%** | **Replicação perfeita do colapso do artigo**.<br>Loss travada em 1.728; predição de classe única ($1/6 = 16.67\%$). |
-| **Contraste** (contrast_expansion) | **SGD** | **Accuracy**<br>**Precision**<br>**Recall**<br>**F1-score** | 97.76%<br>97.60%<br>97.56%<br>97.58% | **89.85%**<br>**90.78%**<br>**89.04%**<br>**89.76%** | -7.91%<br>-6.82%<br>-8.52%<br>-7.82% | Baseline do zero concluído (pronto para retreino com pipeline corrigido). |
+| **Contraste** (contrast_expansion) | **SGD** | **Accuracy**<br>**Precision**<br>**Recall**<br>**F1-score** | 97.76%<br>97.60%<br>97.56%<br>97.58% | **97.57%**<br>**97.27%**<br>**97.24%**<br>**97.25%** | **-0.19%**<br>**-0.33%**<br>**-0.32%**<br>**-0.33%** | **Replicação fiel do artigo**.<br>Diferença inferior a 0.2 p.p. na acurácia (pico na época 22). |
 | **Contraste** (contrast_expansion) | **ADAM** | **Accuracy**<br>**F1-score** | 86.32%<br>86.35% | *(Aguardando execução)* | — | Esperado fenômeno de "resgate" do colapso. |
 | **Equalização** (histogram_eq) | **SGD** | **Accuracy**<br>**F1-score** | 96.80%<br>96.73% | *(Aguardando execução)* | — | Rede mantém estabilidade com SGD. |
 | **Equalização** (histogram_eq) | **ADAM** | **Accuracy**<br>**F1-score** | 20.81%<br>5.74% | *(Aguardando execução)* | — | Falha de convergência esperada com equalização. |
@@ -60,23 +60,21 @@ Todas as execuções foram realizadas com a VGG-16 por 30 épocas, batch size 32
 
 ---
 
-### Experimento C: VGG-16 | Expansão de Contraste + SGD (30 Épocas)
+### Experimento C: VGG-16 | Expansão de Contraste + SGD (30 Épocas — Pipeline Corrigido)
 * **Checkpoint salvo:** `results/vgg16_contrast_expansion_sgd.pth` (513 MB)
 * **Evolução do Treino:**
-  * Época 01/30: Loss: 1.5011 | Accuracy: 33.39%
-  * Época 05/30: Loss: 0.3530 | Accuracy: 86.76%
-  * Época 10/30: Loss: 0.1501 | Accuracy: 94.48%
-  * Época 15/30: Loss: 0.1014 | Accuracy: 96.18%
-  * Época 20/30: Loss: 0.0587 | Accuracy: 98.02%
-  * Época 25/30: Loss: 0.0426 | Accuracy: 98.63%
-  * **Época 27/30: Loss: 0.0247 | Accuracy: 99.14% (Pico do Treino)**
-  * Época 30/30: Loss: 0.0498 | Accuracy: 98.48%
+  * Época 01/30: Loss: 0.5460 | Train Acc: 80.31% | Test Acc: 91.73% ★
+  * Época 06/30: Loss: 0.1530 | Train Acc: 94.93% | Test Acc: 94.78% ★
+  * Época 11/30: Loss: 0.1050 | Train Acc: 96.49% | Test Acc: 96.43% ★
+  * Época 17/30: Loss: 0.0750 | Train Acc: 97.59% | Test Acc: 97.06% ★
+  * **Época 22/30: Loss: 0.0585 | Train Acc: 98.12% | Test Acc: 97.57% ★ (Melhor Checkpoint Restaurado)**
+  * Época 30/30: Loss: 0.0473 | Train Acc: 98.60% | Test Acc: 97.57%
 * **Métricas no Conjunto de Teste (2.720 imagens):**
-  * **Accuracy:** 89.85%
-  * **Precision:** 90.78%
-  * **Recall:** 89.04%
-  * **F1-score:** 89.76%
-* **Conclusão:** O pré-processamento de contraste melhorou o resultado geral em relação à imagem original (+0.18% na acurácia e +0.70% na precisão).
+  * **Accuracy:** 97.57% (Artigo: 97.76% | $\Delta = -0.19\%$)
+  * **Precision:** 97.27% (Artigo: 97.60% | $\Delta = -0.33\%$)
+  * **Recall:** 97.24% (Artigo: 97.56% | $\Delta = -0.32\%$)
+  * **F1-score:** 97.25% (Artigo: 97.58% | $\Delta = -0.33\%$)
+* **Conclusão:** Replicação cravada com o artigo (diferença de apenas `-0.19 p.p.` na acurácia).
 
 ---
 

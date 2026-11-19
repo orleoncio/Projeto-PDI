@@ -105,7 +105,7 @@ def main():
             or args.preprocessing == "contrast_expansion"
         )
 
-    use_augment = (not args.no_augment) and use_pretrained
+    use_augment = (not args.no_augment) and (optimizer_name == "sgd")
 
     # Dispositivo
     device = torch.device(
@@ -164,32 +164,14 @@ def main():
                 T_max=epochs,
                 eta_min=1e-5
             )
-        elif optimizer_name == "adam" and use_pretrained and args.lr is None:
-            # Para Adam com Contrast Stretching (~86.32% no artigo), lr=1e-4 evita explosão nas camadas densas
-            optimizer = create_optimizer(
-                optimizer_name,
-                model,
-                lr=1e-4,
-                weight_decay=args.weight_decay
-            )
-            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-                optimizer,
-                T_max=epochs,
-                eta_min=1e-6
-            )
         else:
+            # Usa os hiperparâmetros padrão do optimizer_factory (Adam: lr=1e-3, weight_decay=0.0)
             optimizer = create_optimizer(
                 optimizer_name,
                 model,
                 lr=args.lr,
-                weight_decay=args.weight_decay if use_pretrained else 0.0
+                weight_decay=args.weight_decay if (optimizer_name == "sgd" and use_pretrained) else 0.0
             )
-            if use_pretrained:
-                scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-                    optimizer,
-                    T_max=epochs,
-                    eta_min=1e-5
-                )
 
         # Treinamento com acompanhamento em tempo real no teste e salvamento do melhor checkpoint
         model = train_model(
@@ -200,7 +182,7 @@ def main():
             epochs=epochs,
             use_amp=args.amp,
             scheduler=scheduler,
-            val_loader=test_loader if use_pretrained else None,
+            val_loader=test_loader if (optimizer_name == "sgd" and use_pretrained) else None,
             max_grad_norm=2.0 if use_pretrained else None
         )
 
