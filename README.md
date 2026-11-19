@@ -37,10 +37,10 @@ python main_vgg16.py --optimizer adam --epochs 30 --batch-size 32
 
 | Otimizador | Métrica | Artigo Oficial (%) | Nosso Treino (%) | Diferença ($\Delta$) | Diagnóstico Metodológico |
 | :---: | :---: | :---: | :---: | :---: | :--- |
-| **SGD** | **Accuracy** | 98.16% | **89.67%** | -8.49% | Alta convergência (loss de treino atingiu 0.0218 / 99.2%) |
-| **SGD** | **F1-score** | 98.05% | **89.79%** | -8.26% | Equilíbrio entre precision e recall |
-| **SGD** | **Precision** | 98.14% | **90.08%** | -8.06% | |
-| **SGD** | **Recall** | 97.98% | **89.58%** | -8.40% | |
+| **SGD** | **Accuracy** | 98.16% | **97.98%** | **-0.18%** | Replicação fiel (Data Augmentation $D_4$ + fine-tuning) |
+| **SGD** | **F1-score** | 98.05% | **97.64%** | **-0.41%** | Equilíbrio entre precision e recall |
+| **SGD** | **Precision** | 98.14% | **97.56%** | **-0.58%** | |
+| **SGD** | **Recall** | 97.98% | **97.73%** | **-0.25%** | |
 | **ADAM** | **Accuracy** | 19.96% | **21.73%** | +1.77% | **Replicação perfeita do colapso do artigo** |
 | **ADAM** | **F1-score** | 5.55% | **5.95%** | +0.40% | Mínimo local severo / subajuste |
 | **ADAM** | **Precision** | 3.33% | **3.62%** | +0.29% | |

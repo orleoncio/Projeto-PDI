@@ -200,7 +200,8 @@ def main():
             epochs=epochs,
             use_amp=args.amp,
             scheduler=scheduler,
-            val_loader=test_loader if use_pretrained else None
+            val_loader=test_loader if use_pretrained else None,
+            max_grad_norm=2.0 if use_pretrained else None
         )
 
         # Salvar os pesos
