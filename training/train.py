@@ -27,7 +27,7 @@ def train_model(
     use_amp=False,
     scheduler=None,
     val_loader=None,
-    max_grad_norm=2.0
+    max_grad_norm=None
 ):
 
     criterion = nn.CrossEntropyLoss()

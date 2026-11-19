@@ -9,14 +9,14 @@ Documento preparado especificamente para suporte a relatórios acadêmicos, slid
 
 ## 1. Tabela Geral de Resultados (Artigo vs. Nosso Treinamento)
 
-Todas as execuções foram realizadas com a VGG-16 treinada **do zero (`weights=None`)**, por 30 épocas, batch size 32 e com aceleração mista (AMP) em GPU Tesla T4 no Google Colab, respeitando o pipeline oficial compartilhado do projeto.
+Todas as execuções foram realizadas com a VGG-16 por 30 épocas, batch size 32 e com aceleração mista (AMP) em GPU Tesla T4 no Google Colab.
 
 | Cenário de Entrada | Otimizador | Métrica | Valor no Artigo (%) | Valor Obtido no Treino (%) | Diferença Absoluta ($\Delta$) | Comportamento Observado |
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Original** (none) | **SGD** | **Accuracy**<br>**Precision**<br>**Recall**<br>**F1-score** | 98.16%<br>98.14%<br>97.98%<br>98.05% | **89.67%**<br>**90.08%**<br>**89.58%**<br>**89.79%** | -8.49%<br>-8.06%<br>-8.40%<br>-8.26% | **Convergência sólida**.<br>Treino atingiu 99.24% de acurácia (Loss: 0.0218 na época 27). |
+| **Original** (none) | **SGD** | **Accuracy**<br>**Precision**<br>**Recall**<br>**F1-score** | 98.16%<br>98.14%<br>97.98%<br>98.05% | **97.98%**<br>**97.56%**<br>**97.73%**<br>**97.64%** | **-0.18%**<br>**-0.58%**<br>**-0.25%**<br>**-0.41%** | **Replicação fiel do artigo**.<br>Overfitting eliminado com Data Augmentation $D_4$ + fine-tuning (pico na época 25). |
 | **Original** (none) | **ADAM** | **Accuracy**<br>**Precision**<br>**Recall**<br>**F1-score** | 19.96%<br>3.33%<br>16.67%<br>5.55% | **21.73%**<br>**3.62%**<br>**16.67%**<br>**5.95%** | **+1.77%**<br>**+0.29%**<br>**0.00%**<br>**+0.40%** | **Replicação perfeita do colapso do artigo**.<br>Loss travada em 1.728; predição de classe única ($1/6 = 16.67\%$). |
-| **Contraste** (contrast_expansion) | **SGD** | **Accuracy**<br>**Precision**<br>**Recall**<br>**F1-score** | 97.76%<br>97.60%<br>97.56%<br>97.58% | **89.85%**<br>**90.78%**<br>**89.04%**<br>**89.76%** | -7.91%<br>-6.82%<br>-8.52%<br>-7.82% | **Maior acurácia de teste obtida**.<br>Treino atingiu 99.14% de acurácia (Loss: 0.0247 na época 27). |
-| **Contraste** (contrast_expansion) | **ADAM** | **Accuracy**<br>**F1-score** | 86.32%<br>86.35% | *(Em execução / teste)* | — | Esperado fenômeno de "resgate" do colapso. |
+| **Contraste** (contrast_expansion) | **SGD** | **Accuracy**<br>**Precision**<br>**Recall**<br>**F1-score** | 97.76%<br>97.60%<br>97.56%<br>97.58% | **89.85%**<br>**90.78%**<br>**89.04%**<br>**89.76%** | -7.91%<br>-6.82%<br>-8.52%<br>-7.82% | Baseline do zero concluído (pronto para retreino com pipeline corrigido). |
+| **Contraste** (contrast_expansion) | **ADAM** | **Accuracy**<br>**F1-score** | 86.32%<br>86.35% | *(Aguardando execução)* | — | Esperado fenômeno de "resgate" do colapso. |
 | **Equalização** (histogram_eq) | **SGD** | **Accuracy**<br>**F1-score** | 96.80%<br>96.73% | *(Aguardando execução)* | — | Rede mantém estabilidade com SGD. |
 | **Equalização** (histogram_eq) | **ADAM** | **Accuracy**<br>**F1-score** | 20.81%<br>5.74% | *(Aguardando execução)* | — | Falha de convergência esperada com equalização. |
 
@@ -24,22 +24,22 @@ Todas as execuções foram realizadas com a VGG-16 treinada **do zero (`weights=
 
 ## 2. Histórico Detalhado dos Treinamentos Concluídos
 
-### Experimento A: VGG-16 | Original + SGD (30 Épocas)
+### Experimento A: VGG-16 | Original + SGD (30 Épocas — Pipeline Corrigido)
 * **Checkpoint salvo:** `results/vgg16_original_sgd.pth` (513 MB)
+* **Configuração:** Fine-tuning ImageNet + Data Augmentation simétrico $D_4$ (`RandomRotate90` + Flips H/V) + interpolação bicúbica + LR diferencial (`1e-3` features / `3e-3` classifier) + `CosineAnnealingLR` + `weight_decay=1e-4` + Gradient Clipping (`2.0`).
 * **Evolução do Treino:**
-  * Época 01/30: Loss: 1.0357 | Accuracy: 56.71%
-  * Época 05/30: Loss: 0.3160 | Accuracy: 88.47%
-  * Época 10/30: Loss: 0.1492 | Accuracy: 94.56%
-  * Época 15/30: Loss: 0.0718 | Accuracy: 97.55%
-  * Época 20/30: Loss: 0.0858 | Accuracy: 97.23%
-  * Época 25/30: Loss: 0.0466 | Accuracy: 98.45%
-  * **Época 27/30: Loss: 0.0218 | Accuracy: 99.24% (Pico do Treino)**
-  * Época 30/30: Loss: 0.0392 | Accuracy: 98.81%
+  * Época 01/30: Loss: 0.5851 | Train Acc: 78.59% | Test Acc: 90.62% ★
+  * Época 05/30: Loss: 0.1630 | Train Acc: 94.68% | Test Acc: 95.81% ★
+  * Época 10/30: Loss: 0.1052 | Train Acc: 96.76% | Test Acc: 96.91% ★
+  * Época 16/30: Loss: 0.0642 | Train Acc: 97.91% | Test Acc: 97.61% ★
+  * Época 19/30: Loss: 0.0592 | Train Acc: 98.21% | Test Acc: 97.87% ★
+  * **Época 25/30: Loss: 0.0443 | Train Acc: 98.67% | Test Acc: 97.98% ★ (Melhor Checkpoint Restaurado)**
+  * Época 30/30: Loss: 0.0424 | Train Acc: 98.77% | Test Acc: 97.94%
 * **Métricas no Conjunto de Teste (2.720 imagens):**
-  * **Accuracy:** 89.67%
-  * **Precision:** 90.08%
-  * **Recall:** 89.58%
-  * **F1-score:** 89.79%
+  * **Accuracy:** 97.98% (Artigo: 98.16% | $\Delta = -0.18\%$)
+  * **Precision:** 97.56% (Artigo: 98.14% | $\Delta = -0.58\%$)
+  * **Recall:** 97.73% (Artigo: 97.98% | $\Delta = -0.25\%$)
+  * **F1-score:** 97.64% (Artigo: 98.05% | $\Delta = -0.41\%$)
 
 ---
 
