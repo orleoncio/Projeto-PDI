@@ -46,16 +46,16 @@ Todas as execuções foram realizadas com a VGG-16 por 30 épocas, batch size 32
 ### Experimento B: VGG-16 | Original + ADAM (30 Épocas)
 * **Checkpoint salvo:** `results/vgg16_original_adam.pth` (513 MB)
 * **Evolução do Treino:**
-  * Época 01/30: Loss: 4.0729 | Accuracy: 20.28%
-  * Época 02/30: Loss: 1.7302 | Accuracy: 20.05%
-  * Época 10/30: Loss: 1.7289 | Accuracy: 20.64%
-  * Época 20/30: Loss: 1.7282 | Accuracy: 20.38%
-  * Época 30/30: Loss: 1.7288 | Accuracy: 19.94%
+  * Época 01/30: Loss: 3.6518 | Accuracy: 20.16%
+  * Época 02/30: Loss: 1.7304 | Accuracy: 20.26%
+  * Época 10/30: Loss: 1.7292 | Accuracy: 19.87%
+  * Época 20/30: Loss: 1.7283 | Accuracy: 21.15%
+  * Época 30/30: Loss: 1.7293 | Accuracy: 20.63%
 * **Métricas no Conjunto de Teste (2.720 imagens):**
-  * **Accuracy:** 21.73%
-  * **Precision:** 3.62%
-  * **Recall:** 16.67%
-  * **F1-score:** 5.95%
+  * **Accuracy:** 21.73% (Artigo: 19.96% | $\Delta = +1.77\%$)
+  * **Precision:** 3.62% (Artigo: 3.33% | $\Delta = +0.29\%$)
+  * **Recall:** 16.67% (Artigo: 16.67% | $\Delta = 0.00\%$)
+  * **F1-score:** 5.95% (Artigo: 5.55% | $\Delta = +0.40\%$)
 * **Conclusão:** A perda ficou estagnada próxima a $\ln(6) \approx 1.79$. A rede previu apenas a classe majoritária (Centromere, que tem 21,7% das instâncias no teste), reproduzindo com precisão matemática o colapso reportado na Tabela 3 do artigo.
 
 ---
