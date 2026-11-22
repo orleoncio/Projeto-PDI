@@ -105,6 +105,7 @@ def get_train_transform(preprocessing="none", normalize=False, augment=True):
         ),
         transforms.ToTensor()
     ])
+
     if normalize:
         ops.append(
             transforms.Normalize(
@@ -112,7 +113,9 @@ def get_train_transform(preprocessing="none", normalize=False, augment=True):
                 std=[0.229, 0.224, 0.225]
             )
         )
+
     return transforms.Compose(ops)
+
 
 def create_dataloaders(
     batch_size=32,
