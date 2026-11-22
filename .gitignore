@@ -7,6 +7,7 @@ __pycache__/
 .cache/
 .pytest_cache/
 .ipynb_checkpoints/
+results/results_squeezenet/
 
 # Ambientes virtuais
 .venv/

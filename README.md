@@ -52,15 +52,20 @@ python main_vgg16.py --optimizer adam --epochs 30 --batch-size 32
 
 A [SqueezeNet 1.1 do torchvision](https://docs.pytorch.org/vision/stable/models/generated/torchvision.models.squeezenet1_1.html) está disponível em `models/squeezenet.py`, com seis classes e sem pesos pré-treinados. O treinamento reutiliza o dataset, o otimizador e o laço de treino compartilhados, seguindo o [guia de uso das CNNs](guia_uso_cnns.md).
 
-Na raiz do projeto, com as mesmas dependências utilizadas pela ResNet-50, execute:
+Na raiz do projeto, compare Adam e SGD nos três cenários, mantendo SqueezeNet 1.1, 30 épocas e lote 32:
 
 ```bash
-python main_squeezenet.py
+python main_squeezenet.py --preprocessing none --optimizer adam --epochs 30 --batch-size 32
+python main_squeezenet.py --preprocessing none --optimizer sgd --epochs 30 --batch-size 32
+python main_squeezenet.py --preprocessing contrast_expansion --optimizer adam --epochs 30 --batch-size 32
+python main_squeezenet.py --preprocessing contrast_expansion --optimizer sgd --epochs 30 --batch-size 32
+python main_squeezenet.py --preprocessing histogram_equalization --optimizer adam --epochs 30 --batch-size 32
+python main_squeezenet.py --preprocessing histogram_equalization --optimizer sgd --epochs 30 --batch-size 32
 ```
 
-O script usa 30 épocas, lote 32 e ADAM, selecionando GPU quando disponível. Ao finalizar, salva os pesos em `results/squeezenet_original_adam.pth`. Para usar SGD, altere `optimizer_name` em `main_squeezenet.py` para `"sgd"`; o arquivo será `results/squeezenet_original_sgd.pth`. Cada execução cria um novo modelo.
+O script seleciona GPU quando disponível, imprime accuracy, precision, recall e F1-score no conjunto de teste e salva cada checkpoint em `results/squeezenet_<cenário>_<otimizador>.pth`. `contrast_expansion` aplica o aumento de contraste já implementado no projeto (fator 1.5). Também aceita `--eval-only` para avaliar um checkpoint existente.
 
-No Colab, ative a GPU, disponibilize o projeto e o dataset, entre na raiz do projeto e execute `!python main_squeezenet.py`.
+No Colab, ative a GPU, disponibilize o projeto e o dataset, entre na raiz do projeto e execute os comandos com `!python -u`. O notebook com as seis execuções está em [treinamento_squeezenet_colab.ipynb](treinamento_squeezenet_colab.ipynb); as métricas já medidas e o estado das rodadas estão em [resultados_squeezenet.md](docs/resultados_squeezenet.md).
 
 ## Trabalhos Futuros e Melhorias
 
