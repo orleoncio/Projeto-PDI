@@ -6,7 +6,6 @@ Este documento reúne os seis cenários da **SqueezeNet** no dataset HEp-2 e com
 
 O projeto instancia a **SqueezeNet 1.1** do TorchVision, treinada do zero para seis classes. O artigo reporta **SqueezeNet 1.0**; portanto, os valores publicados são referência contextual, não uma comparação da mesma arquitetura.
 
-Os seis checkpoints foram lidos do arquivo `results/results_squeezenet/resultados_squeezenet.zip` e avaliados novamente neste projeto com o conjunto de teste de 2.720 imagens, sem normalização e com o pré-processamento correspondente a cada cenário. Precision, recall e F1 são médias macro, conforme `training/test.py`. O ZIP contém pesos, mas não os logs das épocas. As 30 épocas, batch size 32 e AMP são as configurações definidas pelas células correspondentes do notebook; não há log no arquivo para auditar a execução de cada época.
 
 ## 2. Comparação geral: artigo vs. checkpoints do Colab
 
@@ -39,9 +38,3 @@ As diferenças são calculadas como resultado do projeto menos o valor de refer�
 - **Equalização com SGD destoou dos outros cinco cenários.** A accuracy foi 80,00%, mas o F1 macro caiu para 68,79%; precision macro (67,38%) e recall macro (71,19%) também foram baixos. O checkpoint indica desempenho desigual no agregado, mas, sem matriz de confusão ou métricas por classe, não é possível identificar quais classes concentram os erros.
 - **A expansão de contraste não melhorou o resultado de Adam sobre a imagem original** nesta execução: a accuracy caiu 1,03 p.p. e o F1 caiu 1,10 p.p. Com SGD, contraste e imagem original tiveram resultados próximos.
 - A diferença absoluta média frente à referência é **5,56 p.p. em accuracy** e **7,16 p.p. em F1** nos seis cenários. Esses valores devem ser lidos considerando a diferença entre SqueezeNet 1.0 e 1.1 e a ausência dos logs de treino no ZIP.
-
-## 5. Arquivos e limites da análise
-
-Os checkpoints avaliados estão extraídos sob `results/results_squeezenet/content/Projeto-PDI/results/`; o ZIP original foi preservado em `results/results_squeezenet/resultados_squeezenet.zip`. Há também um checkpoint legado `results/squeezenet_original_adam.pth` na raiz de `results/`, que não é o Adam original do ZIP: ele havia produzido 74,04% de accuracy numa avaliação anterior. A tabela deste relatório usa os seis checkpoints do ZIP, incluindo o Adam original que obteve 92,35%.
-
-Como o arquivo recebido contém pesos, mas não logs nem metadados do treino, esta análise compara as métricas finais recalculadas. Ela não inclui curva por época, loss final, melhor época, matriz de confusão ou confirmação independente dos parâmetros usados em cada execução.
