@@ -63,7 +63,20 @@ python main_squeezenet.py --preprocessing histogram_equalization --optimizer ada
 python main_squeezenet.py --preprocessing histogram_equalization --optimizer sgd --epochs 30 --batch-size 32
 ```
 
-O script seleciona GPU quando disponível, imprime accuracy, precision, recall e F1-score no conjunto de teste e salva cada checkpoint em `results/squeezenet_<cenário>_<otimizador>.pth`. `contrast_expansion` aplica o aumento de contraste já implementado no projeto (fator 1.5). Também aceita `--eval-only` para avaliar um checkpoint existente.
+O treinamento usa penalização L2 (`weight_decay=2e-4`), valor da [implementação de referência da SqueezeNet](https://github.com/forresti/SqueezeNet/blob/master/SqueezeNet_v1.0/solver.prototxt). Para ImageNet, os autores usaram SGD com LR inicial `0.04`, momentum `0.9`, lote global 512 e decaimento linear. Como este projeto treina do zero por 30 épocas com lote 32 em HEp-2, o padrão adaptado é LR `1e-3`; essa taxa deve ser comparada na validação, pois o [artigo HEp-2](https://seer.ufrgs.br/rita/article/download/143545/94886/649352) não publica uma LR. Uma fração estratificada de 10% do conjunto de treino seleciona o melhor checkpoint, sem usar o teste nessa escolha. Ajuste a taxa com `--lr` e a penalização com `--weight-decay`.
+
+Exemplo de comparação de taxas no SGD. `--skip-test` impede consultar o teste durante a busca; compare a melhor `Val Acc` entre execuções com a mesma semente. Para medir o resultado final, use `--eval-only` com a taxa selecionada:
+
+```bash
+python main_squeezenet.py --optimizer sgd --lr 0.001 --seed 42 --skip-test
+python main_squeezenet.py --optimizer sgd --lr 0.003 --seed 42 --skip-test
+python main_squeezenet.py --optimizer sgd --lr 0.01 --seed 42 --skip-test
+python main_squeezenet.py --optimizer sgd --lr 0.001 --seed 42 --eval-only
+```
+
+Os checkpoints incluem a taxa, o weight decay, a fração de validação e a semente no nome para preservar resultados de configurações anteriores.
+
+O script seleciona GPU quando disponível, imprime accuracy, precision, recall e F1-score no conjunto de teste e salva cada checkpoint com a taxa e o weight decay no nome. `contrast_expansion` aplica o aumento de contraste já implementado no projeto (fator 1.5). Também aceita `--eval-only` para avaliar um checkpoint existente.
 
 No Colab, ative a GPU, disponibilize o projeto e o dataset, entre na raiz do projeto e execute os comandos com `!python -u`. O notebook com as seis execuções está em [treinamento_squeezenet_colab.ipynb](treinamento_squeezenet_colab.ipynb); as métricas já medidas e o estado das rodadas estão em [resultados_squeezenet.md](docs/resultados_squeezenet.md).
 

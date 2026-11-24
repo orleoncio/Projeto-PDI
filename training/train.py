@@ -101,7 +101,7 @@ def train_model(
                 f"Epoch [{epoch + 1}/{epochs}] "
                 f"Loss: {epoch_loss:.4f} "
                 f"Train Acc: {epoch_accuracy * 100:.2f}% | "
-                f"Test Acc: {val_acc * 100:.2f}%{star}",
+                f"Val Acc: {val_acc * 100:.2f}%{star}",
                 flush=True
             )
         else:
@@ -113,7 +113,7 @@ def train_model(
             )
 
     if best_model_wts is not None:
-        print(f"Restaurando o melhor checkpoint do treino (Test Acc: {best_val_acc * 100:.2f}%)")
+        print(f"Restaurando o melhor checkpoint de validação (Val Acc: {best_val_acc * 100:.2f}%)")
         model.load_state_dict(best_model_wts)
 
     return model

@@ -3,7 +3,7 @@ import pandas as pd
 from pathlib import Path
 from PIL import Image
 
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, Subset
 from torchvision import transforms
 from preprocessing import get_preprocessing_transform
 
@@ -123,8 +123,13 @@ def create_dataloaders(
     normalize=False,
     augment=True,
     num_workers=0,
-    pin_memory=False
+    pin_memory=False,
+    validation_fraction=0.0,
+    seed=42,
 ):
+    if not 0.0 <= validation_fraction < 1.0:
+        raise ValueError("validation_fraction deve estar entre 0 (inclusive) e 1 (exclusive)")
+
     train_transform = get_train_transform(
         preprocessing=preprocessing,
         normalize=normalize,
@@ -147,6 +152,26 @@ def create_dataloaders(
         transform=test_transform
     )
 
+    if validation_fraction:
+        # Divide cada classe separadamente para manter a validação estratificada.
+        rng = random.Random(seed)
+        train_indices = []
+        validation_indices = []
+        for _, class_rows in train_dataset.data.groupby("label").groups.items():
+            class_indices = list(class_rows)
+            rng.shuffle(class_indices)
+            n_validation = max(1, round(len(class_indices) * validation_fraction))
+            validation_indices.extend(class_indices[:n_validation])
+            train_indices.extend(class_indices[n_validation:])
+
+        validation_dataset = Hep2Dataset(
+            csv_file="dataset/train.csv",
+            image_dir="dataset/train",
+            transform=test_transform,
+        )
+        train_dataset = Subset(train_dataset, train_indices)
+        validation_dataset = Subset(validation_dataset, validation_indices)
+
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,
@@ -154,6 +179,15 @@ def create_dataloaders(
         num_workers=num_workers,
         pin_memory=pin_memory
     )
+
+    if validation_fraction:
+        validation_loader = DataLoader(
+            validation_dataset,
+            batch_size=batch_size,
+            shuffle=False,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
+        )
 
     test_loader = DataLoader(
         test_dataset,
@@ -163,4 +197,6 @@ def create_dataloaders(
         pin_memory=pin_memory
     )
 
+    if validation_fraction:
+        return train_loader, validation_loader, test_loader
     return train_loader, test_loader
