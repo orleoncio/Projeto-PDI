@@ -18,6 +18,11 @@ env/
 # Pesos de modelos e checkpoints grandes (>100MB)
 results/*.pth
 
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+
 # Logs e arquivos do sistema operacional
 *.log
 .DS_Store
