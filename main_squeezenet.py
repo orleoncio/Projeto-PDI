@@ -229,6 +229,7 @@ def main():
                 scheduler=fold_scheduler,
                 val_loader=fold_validation_loader,
                 return_training_info=True,
+                validation_label="Val",
             )
             best_epochs.append(fold_info["best_epoch"])
             fold_metrics.append(
@@ -289,6 +290,7 @@ def main():
             use_amp=args.amp,
             scheduler=scheduler,
             val_loader=validation_loader,
+            validation_label="Val",
         )
 
         weights_path.parent.mkdir(exist_ok=True)

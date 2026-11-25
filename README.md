@@ -82,7 +82,7 @@ Para medir a variação entre divisões, execute validação cruzada estratifica
 python main_squeezenet.py --preprocessing none --optimizer sgd --version 1.0 --kfold 5 --epochs 30 --batch-size 32
 ```
 
-O conjunto de teste contém uma imagem (`0.png`) que também aparece no CSV de treino. O pipeline agora remove a cópia do treino antes da validação e do ajuste final.
+O conjunto de teste contém uma imagem (`0.png`) que também aparece no CSV de treino. O pipeline da SqueezeNet remove a cópia do treino antes da validação e do ajuste final.
 
 O script seleciona GPU quando disponível, imprime accuracy, precision, recall e F1-score no conjunto de teste e salva cada checkpoint com versão, taxa, regularização e configuração de divisão no nome. `contrast_expansion` aplica o aumento de contraste já implementado no projeto (fator 1.5). Também aceita `--eval-only` para avaliar um checkpoint existente.
 

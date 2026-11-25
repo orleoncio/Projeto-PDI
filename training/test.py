@@ -60,7 +60,10 @@ def evaluate_model(model, data_loader, device, split_name="TESTE"):
         zero_division=0
     )
 
-    print(f"\n===== RESULTADOS: {split_name} =====")
+    if split_name == "TESTE":
+        print("\n===== RESULTADOS DO TESTE =====")
+    else:
+        print(f"\n===== RESULTADOS: {split_name} =====")
 
     print(f"Accuracy:  {accuracy * 100:.2f}%")
     print(f"Precision: {precision * 100:.2f}%")

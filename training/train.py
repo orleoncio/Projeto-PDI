@@ -29,7 +29,7 @@ def train_model(
     val_loader=None,
     max_grad_norm=None,
     return_training_info=False,
-    validation_label="Val",
+    validation_label="Test",
 ):
 
     criterion = nn.CrossEntropyLoss()
