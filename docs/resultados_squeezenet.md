@@ -10,6 +10,8 @@ Os seis checkpoints foram lidos do arquivo `results/results_squeezenet/resultado
 
 Esses valores são a linha de base anterior à inclusão do `weight_decay=2e-4` e da validação estratificada. Os próximos treinamentos usam checkpoints com sufixos de LR, weight decay, fração de validação e seed; portanto, os resultados novos devem ser registrados separadamente.
 
+Uma auditoria encontrou a imagem `0.png` duplicada nos CSVs de treino e teste, com bytes idênticos. A cópia do treino agora é excluída; isso corrige uma pequena contaminação, mas não explica a diferença de vários pontos percentuais. A arquitetura padrão também foi alinhada à SqueezeNet 1.0 do artigo; os números desta tabela continuam sendo da versão 1.1.
+
 ## 2. Comparação geral: artigo vs. checkpoints do Colab
 
 As diferenças são calculadas como resultado do projeto menos o valor de referência, em pontos percentuais (p.p.).

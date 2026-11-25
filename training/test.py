@@ -8,7 +8,7 @@ from sklearn.metrics import (
 )
 
 
-def test_model(model, test_loader, device):
+def evaluate_model(model, data_loader, device, split_name="TESTE"):
 
     model.eval()
 
@@ -17,7 +17,7 @@ def test_model(model, test_loader, device):
 
     with torch.no_grad():
 
-        for images, labels in test_loader:
+        for images, labels in data_loader:
 
             images = images.to(device)
 
@@ -60,7 +60,7 @@ def test_model(model, test_loader, device):
         zero_division=0
     )
 
-    print("\n===== RESULTADOS DO TESTE =====")
+    print(f"\n===== RESULTADOS: {split_name} =====")
 
     print(f"Accuracy:  {accuracy * 100:.2f}%")
     print(f"Precision: {precision * 100:.2f}%")
@@ -73,3 +73,8 @@ def test_model(model, test_loader, device):
         "recall": recall,
         "f1": f1
     }
+
+
+def test_model(model, test_loader, device):
+    """Avalia uma vez no conjunto de teste independente."""
+    return evaluate_model(model, test_loader, device, split_name="TESTE")

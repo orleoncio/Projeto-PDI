@@ -5,6 +5,7 @@ from PIL import Image
 
 from torch.utils.data import Dataset, DataLoader, Subset
 from torchvision import transforms
+from sklearn.model_selection import StratifiedKFold
 from preprocessing import get_preprocessing_transform
 
 
@@ -152,12 +153,24 @@ def create_dataloaders(
         transform=test_transform
     )
 
+    test_filenames = set(test_dataset.data["filename"])
+    train_indices = [
+        index
+        for index, filename in enumerate(train_dataset.data["filename"])
+        if filename not in test_filenames
+    ]
+    overlap_count = len(train_dataset) - len(train_indices)
+    if overlap_count:
+        print(f"Removendo {overlap_count} imagem(ns) duplicada(s) do treino que também estão no teste.")
+
     if validation_fraction:
         # Divide cada classe separadamente para manter a validação estratificada.
         rng = random.Random(seed)
+        clean_train_indices = train_indices
         train_indices = []
         validation_indices = []
-        for _, class_rows in train_dataset.data.groupby("label").groups.items():
+        clean_data = train_dataset.data.iloc[clean_train_indices]
+        for _, class_rows in clean_data.groupby("label").groups.items():
             class_indices = list(class_rows)
             rng.shuffle(class_indices)
             n_validation = max(1, round(len(class_indices) * validation_fraction))
@@ -171,6 +184,8 @@ def create_dataloaders(
         )
         train_dataset = Subset(train_dataset, train_indices)
         validation_dataset = Subset(validation_dataset, validation_indices)
+    elif overlap_count:
+        train_dataset = Subset(train_dataset, train_indices)
 
     train_loader = DataLoader(
         train_dataset,
@@ -200,3 +215,92 @@ def create_dataloaders(
     if validation_fraction:
         return train_loader, validation_loader, test_loader
     return train_loader, test_loader
+
+
+def create_kfold_dataloaders(
+    n_splits=5,
+    batch_size=32,
+    preprocessing="none",
+    normalize=False,
+    augment=True,
+    num_workers=0,
+    pin_memory=False,
+    seed=42,
+):
+    """Cria folds estratificados apenas do CSV de treino e mantém o teste isolado."""
+    if n_splits < 2:
+        raise ValueError("n_splits precisa ser pelo menos 2")
+
+    train_dataset = Hep2Dataset(
+        csv_file="dataset/train.csv",
+        image_dir="dataset/train",
+        transform=get_train_transform(
+            preprocessing=preprocessing,
+            normalize=normalize,
+            augment=augment,
+        ),
+    )
+    validation_dataset = Hep2Dataset(
+        csv_file="dataset/train.csv",
+        image_dir="dataset/train",
+        transform=get_original_transform(
+            preprocessing=preprocessing,
+            normalize=normalize,
+        ),
+    )
+    test_dataset = Hep2Dataset(
+        csv_file="dataset/test.csv",
+        image_dir="dataset/test",
+        transform=get_original_transform(
+            preprocessing=preprocessing,
+            normalize=normalize,
+        ),
+    )
+
+    test_filenames = set(test_dataset.data["filename"])
+    eligible_indices = [
+        index
+        for index, filename in enumerate(train_dataset.data["filename"])
+        if filename not in test_filenames
+    ]
+    overlap_count = len(train_dataset) - len(eligible_indices)
+    if overlap_count:
+        print(f"Removendo {overlap_count} imagem(ns) duplicada(s) do treino que também estão no teste.")
+
+    labels = train_dataset.data.iloc[eligible_indices]["label"].to_numpy()
+    splitter = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)
+    folds = []
+    for train_positions, validation_positions in splitter.split(eligible_indices, labels):
+        fold_train_indices = [eligible_indices[i] for i in train_positions]
+        fold_validation_indices = [eligible_indices[i] for i in validation_positions]
+        fold_train = DataLoader(
+            Subset(train_dataset, fold_train_indices),
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
+        )
+        fold_validation = DataLoader(
+            Subset(validation_dataset, fold_validation_indices),
+            batch_size=batch_size,
+            shuffle=False,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
+        )
+        folds.append((fold_train, fold_validation))
+
+    full_train_loader = DataLoader(
+        Subset(train_dataset, eligible_indices),
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+    )
+    test_loader = DataLoader(
+        test_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+    )
+    return folds, full_train_loader, test_loader

@@ -27,7 +27,8 @@ def train_model(
     use_amp=False,
     scheduler=None,
     val_loader=None,
-    max_grad_norm=None
+    max_grad_norm=None,
+    return_training_info=False,
 ):
 
     criterion = nn.CrossEntropyLoss()
@@ -35,6 +36,7 @@ def train_model(
     scaler = torch.amp.GradScaler("cuda", enabled=amp_enabled)
 
     best_val_acc = -1.0
+    best_epoch = None
     best_model_wts = None
 
     for epoch in range(epochs):
@@ -95,6 +97,7 @@ def train_model(
             is_best = val_acc > best_val_acc
             if is_best:
                 best_val_acc = val_acc
+                best_epoch = epoch + 1
                 best_model_wts = copy.deepcopy(model.state_dict())
             star = " ★ [BEST]" if is_best else ""
             print(
@@ -116,4 +119,6 @@ def train_model(
         print(f"Restaurando o melhor checkpoint de validação (Val Acc: {best_val_acc * 100:.2f}%)")
         model.load_state_dict(best_model_wts)
 
+    if return_training_info:
+        return model, {"best_val_accuracy": best_val_acc, "best_epoch": best_epoch}
     return model

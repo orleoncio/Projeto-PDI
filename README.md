@@ -50,9 +50,9 @@ python main_vgg16.py --optimizer adam --epochs 30 --batch-size 32
 
 ## Treinamento da SqueezeNet
 
-A [SqueezeNet 1.1 do torchvision](https://docs.pytorch.org/vision/stable/models/generated/torchvision.models.squeezenet1_1.html) está disponível em `models/squeezenet.py`, com seis classes e sem pesos pré-treinados. O treinamento reutiliza o dataset, o otimizador e o laço de treino compartilhados, seguindo o [guia de uso das CNNs](guia_uso_cnns.md).
+A SqueezeNet do TorchVision está disponível em `models/squeezenet.py`, com seis classes e sem pesos pré-treinados. O padrão agora é **SqueezeNet 1.0**, que corresponde à arquitetura reportada pelo artigo; a versão 1.1 continua disponível com `--version 1.1`. O treinamento reutiliza o dataset, o otimizador e o laço de treino compartilhados, seguindo o [guia de uso das CNNs](guia_uso_cnns.md).
 
-Na raiz do projeto, compare Adam e SGD nos três cenários, mantendo SqueezeNet 1.1, 30 épocas e lote 32:
+Na raiz do projeto, compare Adam e SGD nos três cenários, mantendo SqueezeNet 1.0, 30 épocas e lote 32:
 
 ```bash
 python main_squeezenet.py --preprocessing none --optimizer adam --epochs 30 --batch-size 32
@@ -74,9 +74,17 @@ python main_squeezenet.py --optimizer sgd --lr 0.01 --seed 42 --skip-test
 python main_squeezenet.py --optimizer sgd --lr 0.001 --seed 42 --eval-only
 ```
 
-Os checkpoints incluem a taxa, o weight decay, a fração de validação e a semente no nome para preservar resultados de configurações anteriores.
+Os checkpoints incluem versão, taxa, weight decay, divisão e semente no nome para preservar resultados de configurações anteriores.
 
-O script seleciona GPU quando disponível, imprime accuracy, precision, recall e F1-score no conjunto de teste e salva cada checkpoint com a taxa e o weight decay no nome. `contrast_expansion` aplica o aumento de contraste já implementado no projeto (fator 1.5). Também aceita `--eval-only` para avaliar um checkpoint existente.
+Para medir a variação entre divisões, execute validação cruzada estratificada com cinco folds somente nos dados de treino. O script imprime média e desvio padrão das quatro métricas de validação, refaz o modelo com todo o treino pelo número mediano de melhores épocas dos folds e avalia o conjunto de teste independente uma vez ao final:
+
+```bash
+python main_squeezenet.py --preprocessing none --optimizer sgd --version 1.0 --kfold 5 --epochs 30 --batch-size 32
+```
+
+O conjunto de teste contém uma imagem (`0.png`) que também aparece no CSV de treino. O pipeline agora remove a cópia do treino antes da validação e do ajuste final.
+
+O script seleciona GPU quando disponível, imprime accuracy, precision, recall e F1-score no conjunto de teste e salva cada checkpoint com versão, taxa, regularização e configuração de divisão no nome. `contrast_expansion` aplica o aumento de contraste já implementado no projeto (fator 1.5). Também aceita `--eval-only` para avaliar um checkpoint existente.
 
 No Colab, ative a GPU, disponibilize o projeto e o dataset, entre na raiz do projeto e execute os comandos com `!python -u`. O notebook com as seis execuções está em [treinamento_squeezenet_colab.ipynb](treinamento_squeezenet_colab.ipynb); as métricas já medidas e o estado das rodadas estão em [resultados_squeezenet.md](docs/resultados_squeezenet.md).
 
