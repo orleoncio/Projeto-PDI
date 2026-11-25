@@ -127,6 +127,7 @@ def create_dataloaders(
     pin_memory=False,
     validation_fraction=0.0,
     seed=42,
+    exclude_test_duplicates=False,
 ):
     if not 0.0 <= validation_fraction < 1.0:
         raise ValueError("validation_fraction deve estar entre 0 (inclusive) e 1 (exclusive)")
@@ -153,12 +154,15 @@ def create_dataloaders(
         transform=test_transform
     )
 
-    test_filenames = set(test_dataset.data["filename"])
-    train_indices = [
-        index
-        for index, filename in enumerate(train_dataset.data["filename"])
-        if filename not in test_filenames
-    ]
+    if exclude_test_duplicates:
+        test_filenames = set(test_dataset.data["filename"])
+        train_indices = [
+            index
+            for index, filename in enumerate(train_dataset.data["filename"])
+            if filename not in test_filenames
+        ]
+    else:
+        train_indices = list(range(len(train_dataset)))
     overlap_count = len(train_dataset) - len(train_indices)
     if overlap_count:
         print(f"Removendo {overlap_count} imagem(ns) duplicada(s) do treino que também estão no teste.")

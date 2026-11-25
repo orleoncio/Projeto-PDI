@@ -29,6 +29,7 @@ def train_model(
     val_loader=None,
     max_grad_norm=None,
     return_training_info=False,
+    validation_label="Val",
 ):
 
     criterion = nn.CrossEntropyLoss()
@@ -104,7 +105,7 @@ def train_model(
                 f"Epoch [{epoch + 1}/{epochs}] "
                 f"Loss: {epoch_loss:.4f} "
                 f"Train Acc: {epoch_accuracy * 100:.2f}% | "
-                f"Val Acc: {val_acc * 100:.2f}%{star}",
+                f"{validation_label} Acc: {val_acc * 100:.2f}%{star}",
                 flush=True
             )
         else:

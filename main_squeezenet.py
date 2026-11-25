@@ -180,6 +180,7 @@ def main():
             pin_memory=use_cuda,
             validation_fraction=0.0,
             seed=args.seed,
+            exclude_test_duplicates=True,
         )
     else:
         train_loader, validation_loader, test_loader = create_dataloaders(
@@ -190,6 +191,7 @@ def main():
             pin_memory=use_cuda,
             validation_fraction=args.validation_fraction,
             seed=args.seed,
+            exclude_test_duplicates=True,
         )
 
     print(f"Imagens de treinamento: {len(train_loader.dataset)}")
